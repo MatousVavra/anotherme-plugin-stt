@@ -1,0 +1,20 @@
+name: stt
+version: 0.1.0
+description: Speech-to-text via Whisper
+author: AnotherMe
+entrypoint: plugin
+capabilities:
+  - routes
+  - ui
+dependencies:
+  - memory
+ui:
+  icon: mic
+  order: 999
+  component: true
+settings:
+  - key: model
+    label: "Whisper model"
+    type: text
+    default: "whisper-large-v3"
+    description: "STT model name"
