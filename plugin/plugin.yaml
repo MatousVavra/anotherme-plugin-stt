@@ -1,13 +1,14 @@
 name: stt
-version: 0.1.0
+version: 0.2.0
 description: Speech-to-text via Whisper
 author: AnotherMe
 entrypoint: plugin
 capabilities:
   - routes
   - ui
-dependencies:
-  - memory
+soft_dependencies:
+  - name: memory
+    enables: "speaker name correction in transcripts"
 ui:
   icon: mic
   order: 999
