@@ -19,3 +19,4 @@ settings:
     type: text
     default: "whisper-large-v3"
     description: "STT model name"
+tables: []
