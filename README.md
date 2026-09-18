@@ -15,7 +15,12 @@ history lives there.
 | `AI_API_KEY` | — | Provider API key |
 | `WHISPER_MODEL` | `whisper-large-v3` | STT model name |
 
-The model is also configurable per-install via the plugin settings UI.
+The model is also configurable per-install via the plugin settings UI
+(stored settings take precedence over `WHISPER_MODEL`).
+
+The frontend exposes `AM.stt.getLastTranscript()` returning the full result
+of the most recent transcription (`text`, `original_text`, `segments`,
+`language`, `duration`, `name_corrections`) or `null`.
 
 ## Development
 

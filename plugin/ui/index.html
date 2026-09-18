@@ -1,2 +1,30 @@
 <div class="stt-component" style="display:none;" x-data="sttComponent()">
+    <div class="voice-bar" x-data x-cloak role="status" aria-label="Voice recording"
+         x-show="$store.voice && ($store.voice.isRecording || $store.voice.isTranscribing)">
+        <template x-if="$store.voice && $store.voice.isRecording">
+            <div class="voice-bar-recording">
+                <span class="voice-dot" aria-hidden="true"></span>
+                <div class="voice-wave" aria-hidden="true">
+                    <template x-for="(lvl, i) in $store.voice.levels" :key="i">
+                        <span class="voice-wave-bar" :style="'height:' + Math.round(5 + Math.min(1, lvl * 7) * 19) + 'px'"></span>
+                    </template>
+                </div>
+                <span class="voice-timer" x-text="$store.voice.time"></span>
+                <span class="voice-target" x-text="sttTargetLabel($store.voice.target)"></span>
+                <button class="voice-btn voice-btn-cancel" @click="AM.voice && AM.voice.cancelRecording()" aria-label="Cancel recording">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+                <button class="voice-btn voice-btn-stop" @click="AM.voice && AM.voice.stopRecording()" aria-label="Stop recording">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+            </div>
+        </template>
+        <template x-if="$store.voice && $store.voice.isTranscribing && !$store.voice.isRecording">
+            <div class="voice-bar-transcribing">
+                <span class="voice-spinner" aria-hidden="true"></span>
+                <span class="voice-transcribing-label">Transcribing…</span>
+                <span class="voice-target" x-text="sttTargetLabel($store.voice.target)"></span>
+            </div>
+        </template>
+    </div>
 </div>

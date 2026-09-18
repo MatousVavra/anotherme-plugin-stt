@@ -20,7 +20,7 @@ def build_name_prompt(people: list[dict]) -> str:
     names = [p["name"] for p in people if p.get("name")]
     hints = []
     for p in people:
-        if p.get("pronunciation_hint"):
+        if p.get("name") and p.get("pronunciation_hint"):
             hints.append(f"{p['name']} is pronounced {p['pronunciation_hint']}")
     lines = [
         "The following names may appear in the audio; preserve their exact spelling and diacritics:",

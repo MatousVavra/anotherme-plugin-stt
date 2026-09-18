@@ -3,6 +3,7 @@ import importlib.util
 import io
 from pathlib import Path
 
+import openai
 from openai import OpenAI
 from fastapi import APIRouter, HTTPException, UploadFile
 
@@ -36,13 +37,24 @@ class SttApi:
     def _settings(self) -> tuple[str, str, str]:
         base_url = self._ctx.get_env("AI_BASE_URL") or "https://llm.ai.e-infra.cz/v1/"
         api_key = self._ctx.get_env("AI_API_KEY") or ""
-        model = self._ctx.get_env("WHISPER_MODEL") or "whisper-large-v3"
+        model = self._configured_model() or self._ctx.get_env("WHISPER_MODEL") or "whisper-large-v3"
         return base_url, api_key, model
+
+    def _configured_model(self) -> str | None:
+        value = (self._ctx.get_config() or {}).get("model")
+        return value if isinstance(value, str) and value else None
+
+    def _client(self) -> OpenAI:
+        llm = getattr(self._ctx, "llm_client", None)
+        if llm is not None and hasattr(llm, "get_client"):
+            return llm.get_client()
+        base_url, api_key, _ = self._settings()
+        return OpenAI(base_url=base_url, api_key=api_key)
 
     def transcribe(self, vault_name, audio_bytes, filename):
         people = self._memory_getter(vault_name)
-        base_url, api_key, model = self._settings()
-        client = OpenAI(base_url=base_url, api_key=api_key)
+        _, _, model = self._settings()
+        client = self._client()
         buf = io.BytesIO(audio_bytes)
         buf.name = filename
         prompt = build_name_prompt(people or [])
@@ -82,12 +94,21 @@ class Plugin:
             audio_bytes = await file.read()
             if len(audio_bytes) == 0:
                 raise HTTPException(400, "Empty audio file")
-            return await asyncio.to_thread(
-                stt_api.transcribe,
-                ctx.vault_name,
-                audio_bytes,
-                file.filename,
-            )
+            if len(audio_bytes) > 25 * 1024 * 1024:
+                raise HTTPException(413, "Audio file too large (max 25 MB)")
+            try:
+                return await asyncio.to_thread(
+                    stt_api.transcribe,
+                    ctx.vault_name,
+                    audio_bytes,
+                    file.filename,
+                )
+            except openai.AuthenticationError:
+                raise HTTPException(503, "STT provider not configured")
+            except (openai.APITimeoutError, openai.APIConnectionError):
+                raise HTTPException(504, "Transcription provider timeout")
+            except openai.APIError as e:
+                raise HTTPException(502, f"Transcription failed: {e}")
 
         ctx.register_router(router)
         ctx.register_api("stt", stt_api)
